@@ -20,10 +20,9 @@ await redisClient.connect();
 // GET /photos?albumId=1
 app.get("/photos", async (req, res) => {
     const albumId = req.query.albumId;
-    console.log("Received request for albumId:", albumId);
     const redisKey = `photos?albumId=${albumId}`;
 
-    const photos = await getOrSetCache(redisKey , async() => {
+    const photos = await getOrSetCache(redisKey, async () => {
         const { data } = await axios.get("https://jsonplaceholder.typicode.com/photos", {
             params: { albumId },
         });
@@ -37,23 +36,22 @@ app.get("/photos/:id", async (req, res) => {
     const redisKey = `photos/${req.params.id}`;
 
     const photo = await getOrSetCache(redisKey, async () => {
-        const { data } = await axios.get( `https://jsonplaceholder.typicode.com/photos/${redisKey}`);
+        const { data } = await axios.get(`https://jsonplaceholder.typicode.com/photos/${req.params.id}`);
         return data;
     });
-    
+
     res.json(photo);
 });
 
-function getOrSetCache(key, cb) {
-    return new Promise ((resolve, reject) => {
-        redisClient.get(key, async(error, data) =>{
-            if(error) return reject(error);
-            if (data !== null) return resolve(JSON.parse(data));
-            const freshData = await cb();
-            redisClient.setEx(key, DEFAULT_EXPIRATION, JSON.stringify(freshData));
-        })
-    })
-}
+const getOrSetCache = async (key, cb) => {
+    try {
+        const cachedData = await redisClient.get(key);
+        if (cachedData !== null) { return JSON.parse(cachedData); }
+        const freshData = await cb();
+        await redisClient.setEx(key, DEFAULT_EXPIRATION, JSON.stringify(freshData));
+        return freshData;
+    } catch (error) { return await cb(); }
+} 
 
 // Start the server
 const PORT = 3000;
