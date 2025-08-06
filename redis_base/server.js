@@ -20,7 +20,7 @@ await redisClient.connect();
 // GET /photos?albumId=1
 app.get("/photos", async (req, res) => {
     const albumId = req.query.albumId;
-    const redisKey = `photos?albumId=${albumId}`;
+    const redisKey = `photos:albumId=${albumId}`;
 
     const photos = await getOrSetCache(redisKey, async () => {
         const { data } = await axios.get("https://jsonplaceholder.typicode.com/photos", {
@@ -33,7 +33,7 @@ app.get("/photos", async (req, res) => {
 
 // GET /photos/:id
 app.get("/photos/:id", async (req, res) => {
-    const redisKey = `photos/${req.params.id}`;
+    const redisKey = `photos:${req.params.id}`;
 
     const photo = await getOrSetCache(redisKey, async () => {
         const { data } = await axios.get(`https://jsonplaceholder.typicode.com/photos/${req.params.id}`);
