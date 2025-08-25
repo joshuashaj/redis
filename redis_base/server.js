@@ -6,7 +6,9 @@ import Redis from "redis";
 const app = express();
 app.use(cors());
 
-const redisClient = Redis.createClient();
+const redisClient = Redis.createClient({
+    url: 'redis://redis-stack:6379'
+})
 
 const DEFAULT_EXPIRATION = 3600;
 
@@ -54,7 +56,6 @@ const getOrSetCache = async (key, cb) => {
 } 
 
 // Start the server
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Server running on port 3000');
 });
